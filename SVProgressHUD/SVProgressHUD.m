@@ -20,12 +20,12 @@
 
 @property (nonatomic, readwrite) SVProgressHUDMaskType maskType;
 @property (nonatomic, readwrite) BOOL showNetworkIndicator;
-@property (nonatomic, retain) NSTimer *fadeOutTimer;
-@property (nonatomic, readonly) UIView *hudView;
-@property (nonatomic, readonly) UILabel *stringLabel;
-@property (nonatomic, readonly) UIImageView *imageView;
-@property (nonatomic, readonly) UIActivityIndicatorView *spinnerView;
-@property (nonatomic, assign) UIWindow *previousKeyWindow;
+@property (nonatomic, strong) NSTimer *fadeOutTimer;
+@property (strong, nonatomic, readonly) UIView *hudView;
+@property (strong, nonatomic, readonly) UILabel *stringLabel;
+@property (strong, nonatomic, readonly) UIImageView *imageView;
+@property (strong, nonatomic, readonly) UIActivityIndicatorView *spinnerView;
+@property (nonatomic, weak) UIWindow *previousKeyWindow;
 @property (nonatomic, readonly) CGFloat visibleKeyboardHeight;
 
 - (void)showWithStatus:(NSString*)string maskType:(SVProgressHUDMaskType)hudMaskType networkIndicator:(BOOL)show;
@@ -50,16 +50,11 @@ static SVProgressHUD *sharedView = nil;
 - (void)dealloc {
 	
 	if(fadeOutTimer != nil)
-		[fadeOutTimer invalidate], [fadeOutTimer release], fadeOutTimer = nil;
+		[fadeOutTimer invalidate], fadeOutTimer, fadeOutTimer = nil;
 	
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    [hudView release];
-    [stringLabel release];
-    [imageView release];
-    [spinnerView release];
     
-    [super dealloc];
 }
 
 
@@ -246,7 +241,7 @@ static SVProgressHUD *sharedView = nil;
 - (void)showWithStatus:(NSString*)string maskType:(SVProgressHUDMaskType)hudMaskType networkIndicator:(BOOL)show {
     
 	if(fadeOutTimer != nil)
-		[fadeOutTimer invalidate], [fadeOutTimer release], fadeOutTimer = nil;
+		[fadeOutTimer invalidate], fadeOutTimer = nil;
 	
     self.showNetworkIndicator = show;
     
@@ -429,9 +424,9 @@ static SVProgressHUD *sharedView = nil;
 	[self.spinnerView stopAnimating];
     
 	if(fadeOutTimer != nil)
-		[fadeOutTimer invalidate], [fadeOutTimer release], fadeOutTimer = nil;
+		[fadeOutTimer invalidate], fadeOutTimer = nil;
 	
-	fadeOutTimer = [[NSTimer scheduledTimerWithTimeInterval:seconds target:self selector:@selector(dismiss) userInfo:nil repeats:NO] retain];
+	fadeOutTimer = [NSTimer scheduledTimerWithTimeInterval:seconds target:self selector:@selector(dismiss) userInfo:nil repeats:NO];
 }
 
 - (void)dismiss {
@@ -450,7 +445,7 @@ static SVProgressHUD *sharedView = nil;
                          if(sharedView.alpha == 0) {
                              [[NSNotificationCenter defaultCenter] removeObserver:sharedView];
                              [sharedView.previousKeyWindow makeKeyWindow];
-                             [sharedView release], sharedView = nil;
+                             sharedView = nil;
                              
                              // uncomment to make sure UIWindow is gone from app.windows
                              //NSLog(@"%@", [UIApplication sharedApplication].windows);
@@ -517,38 +512,36 @@ static SVProgressHUD *sharedView = nil;
 }
 
 - (CGFloat)visibleKeyboardHeight {
-    
-    NSAutoreleasePool *autoreleasePool = [[NSAutoreleasePool alloc] init];
-    
-    UIWindow *keyboardWindow = nil;
-    for (UIWindow *testWindow in [[UIApplication sharedApplication] windows]) {
-        if(![[testWindow class] isEqual:[UIWindow class]] && ![[testWindow class] isEqual:[SVProgressHUD class]]) {
-            keyboardWindow = testWindow;
-            break;
-        }
-    }
-
-    // Locate UIKeyboard.  
-    UIView *foundKeyboard = nil;
-    for (UIView *possibleKeyboard in [keyboardWindow subviews]) {
+	@autoreleasepool {
+		UIWindow *keyboardWindow = nil;
+		for (UIWindow *testWindow in [[UIApplication sharedApplication] windows]) {
+			if(![[testWindow class] isEqual:[UIWindow class]] && ![[testWindow class] isEqual:[SVProgressHUD class]]) {
+				keyboardWindow = testWindow;
+				break;
+			}
+		}
+		
+		// Locate UIKeyboard.  
+		UIView *foundKeyboard = nil;
+		for (__strong UIView *possibleKeyboard in [keyboardWindow subviews]) {
+			
+			// iOS 4 sticks the UIKeyboard inside a UIPeripheralHostView.
+			if ([[possibleKeyboard description] hasPrefix:@"<UIPeripheralHostView"]) {
+				possibleKeyboard = [[possibleKeyboard subviews] objectAtIndex:0];
+			}                                                                                
+			
+			if ([[possibleKeyboard description] hasPrefix:@"<UIKeyboard"]) {
+				foundKeyboard = possibleKeyboard;
+				break;
+			}
+		}
+		
         
-        // iOS 4 sticks the UIKeyboard inside a UIPeripheralHostView.
-        if ([[possibleKeyboard description] hasPrefix:@"<UIPeripheralHostView"]) {
-            possibleKeyboard = [[possibleKeyboard subviews] objectAtIndex:0];
-        }                                                                                
-        
-        if ([[possibleKeyboard description] hasPrefix:@"<UIKeyboard"]) {
-            foundKeyboard = possibleKeyboard;
-            break;
-        }
-    }
-    
-    [autoreleasePool release];
-        
-    if(foundKeyboard && foundKeyboard.bounds.size.height > 100)
-        return foundKeyboard.bounds.size.height;
-    
-    return 0;
+		if(foundKeyboard && foundKeyboard.bounds.size.height > 100)
+			return foundKeyboard.bounds.size.height;
+		
+		return 0;
+	}
 }
 
 @end
