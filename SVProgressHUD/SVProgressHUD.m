@@ -50,7 +50,7 @@ static SVProgressHUD *sharedView = nil;
 - (void)dealloc {
 	
 	if(fadeOutTimer != nil)
-		[fadeOutTimer invalidate], fadeOutTimer, fadeOutTimer = nil;
+		[fadeOutTimer invalidate], fadeOutTimer = nil;
 	
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
