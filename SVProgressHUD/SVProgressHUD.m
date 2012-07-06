@@ -527,7 +527,7 @@ static SVProgressHUD *sharedView = nil;
 			
 			// iOS 4 sticks the UIKeyboard inside a UIPeripheralHostView.
 			if ([[possibleKeyboard description] hasPrefix:@"<UIPeripheralHostView"]) {
-				possibleKeyboard = [[possibleKeyboard subviews] objectAtIndex:0];
+				possibleKeyboard = [possibleKeyboard subviews][0];
 			}                                                                                
 			
 			if ([[possibleKeyboard description] hasPrefix:@"<UIKeyboard"]) {
