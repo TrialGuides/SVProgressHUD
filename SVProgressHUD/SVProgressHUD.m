@@ -472,6 +472,10 @@ static SVProgressHUD *sharedView = nil;
 
 - (UILabel *)stringLabel {
     
+#ifndef NSTextAlignmentCenter
+    #define NSTextAlignmentCenter UITextAlignmentCenter
+#endif
+    
     if (stringLabel == nil) {
         stringLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		stringLabel.textColor = [UIColor whiteColor];
@@ -527,8 +531,9 @@ static SVProgressHUD *sharedView = nil;
 			
 			// iOS 4 sticks the UIKeyboard inside a UIPeripheralHostView.
 			if ([[possibleKeyboard description] hasPrefix:@"<UIPeripheralHostView"]) {
-				possibleKeyboard = [possibleKeyboard subviews][0];
-			}                                                                                
+                possibleKeyboard = [[possibleKeyboard subviews] objectAtIndex:0];
+//				possibleKeyboard = [possibleKeyboard subviews][0];
+			}
 			
 			if ([[possibleKeyboard description] hasPrefix:@"<UIKeyboard"]) {
 				foundKeyboard = possibleKeyboard;
