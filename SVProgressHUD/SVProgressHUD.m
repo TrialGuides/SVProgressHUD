@@ -473,7 +473,7 @@ static SVProgressHUD *sharedView = nil;
 - (UILabel *)stringLabel {
     
 #ifndef NSTextAlignmentCenter
-    #define NSTextAlignmentCenter UITextAlignmentCenter
+    #define NSTextAlignmentCenter NSTextAlignmentCenter
 #endif
     
     if (stringLabel == nil) {
